@@ -1,0 +1,9 @@
+/.vs
+/Application/obj/*
+/Application/bin/*
+/Domain/obj/*
+/Domain/bin/*
+/Infraestructure/obj/*
+/Infraestructure/bin/*
+/ProjectTemplate/obj/*
+/ProjectTemplate/bin/*
