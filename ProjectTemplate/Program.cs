@@ -1,6 +1,7 @@
 using Autenticacion.Configuration;
 using Infraestructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -37,6 +38,8 @@ builder.Services.AddAuthentication(option =>
         };
     });
 
+builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
+    .AddEntityFrameworkStores<AppDbContext>();
 
 //Custom
 var connectionString = builder.Configuration["ConnectionString"];
