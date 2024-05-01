@@ -10,9 +10,9 @@ namespace Domain.DTOs
     public class UserLoginRequestDto 
     {
         [Required]
-        public string EmailAddress { get; set; }
+        public required string EmailAddress { get; set; }
         [Required]
-        public string Password { get; set; }
+        public required string Password { get; set; }
 
 
     }

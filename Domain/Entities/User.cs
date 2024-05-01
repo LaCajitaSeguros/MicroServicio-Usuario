@@ -1,26 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain.DTOs
+namespace Domain.Entities
 {
-    public class UserRegistrationRequestDto
+    public class User
     {
-        [Required]
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public required string UserId { get; set; }
+
         public required string Name { get; set; }
-        [Required]
         public required string LastName { get; set; }
-        [Required]
         public required string Dni { get; set; }
-        [Required]
         public required string EmailAddress { get; set; }
-        [Required]
         public required string Password { get; set; }
-        
-        
+
 
     }
 }

@@ -1,10 +1,17 @@
+using Application.Service;
+using Application.Service.ServiceImpl;
+using Application.Validation;
 using Autenticacion.Configuration;
+using Infraestructure.Command;
 using Infraestructure.Persistence;
+using Infraestructure.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using static Application.Validation.IValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,9 +48,16 @@ builder.Services.AddAuthentication(option =>
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddEntityFrameworkStores<AppDbContext>();
 
+
 //Custom
 var connectionString = builder.Configuration["ConnectionString"];
 builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(connectionString));
+
+builder.Services.AddScoped<IValidation, Validation>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<UserManager<IdentityUser>>();
+builder.Services.AddScoped<IUserService, UserServiceImpl>();
+
 
 var app = builder.Build();
 

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Autenticacion.Controllers
 {
-    public class UserAdditionalData
+    public class UserDto
     {
         public string UserId { get; set; }
         public string Name { get; set; }

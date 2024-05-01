@@ -1,19 +1,20 @@
 ﻿using Autenticacion.Controllers;
+using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infraestructure.Persistence
 {
-    public class AppDbContext : Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityDbContext
+    public class AppDbContext : IdentityDbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-        public DbSet<UserAdditionalData> UsersAdditionalData { get; set; }
+        public DbSet<User> User { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<UserAdditionalData>()
+            modelBuilder.Entity<User>()
            .HasKey(u => u.UserId);
 
             modelBuilder.Entity<IdentityUserLogin<string>>(b =>

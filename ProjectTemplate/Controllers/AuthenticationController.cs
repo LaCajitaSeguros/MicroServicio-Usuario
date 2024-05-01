@@ -1,6 +1,7 @@
 ﻿using Application.Auth;
-using Autenticacion.Configuration;
+using Application.Service;
 using Domain.DTOs;
+using Domain.Entities;
 using Infraestructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -17,156 +18,114 @@ namespace Autenticacion.Controllers
     public class AuthenticationController : Controller
     {
         //Maneja la autenticación de usuarios
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly JwtConfig _jwtConfig;
-        private readonly AppDbContext _dbContext;
+        private readonly IUserService userService;
 
-        public AuthenticationController(UserManager<IdentityUser> userManager,IOptions<JwtConfig> jwtConfig, AppDbContext dbContext)
+        public AuthenticationController(IUserService userService)
         {
-            _userManager = userManager;
-            _jwtConfig = jwtConfig.Value;
-            _dbContext = dbContext;
+            this.userService = userService;
+
         }
 
+
         [HttpPost("Register")]
-        public async Task<IActionResult> Registrer([FromBody] UserRegistrationRequestDto requestDto)
+        public async Task<IActionResult> Register([FromBody] UserRegistrationRequestDto requestDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest();
             }
 
-            var emailExists = await _userManager.FindByEmailAsync(requestDto.EmailAddress);
-            if (emailExists != null)
-            {
-                return BadRequest(new AuthResult()
-                {
-                    Result = false,
-                    Errors = new List<string>()
-            {
-                "Email already exists"
-            }
-                });
-            }
-
-            var user = new IdentityUser()
-            {
-                Email = requestDto.EmailAddress,
-                UserName = requestDto.EmailAddress
-            };
-
-            var isCreate = await _userManager.CreateAsync(user, requestDto.Password);
-
-            if (isCreate.Succeeded)
-            {
-                var additionalData = new UserAdditionalData
-                {
-                    UserId = user.Id,
-                    Name = requestDto.Name,
-                    LastName = requestDto.LastName,
-                    Dni = requestDto.Dni
-                };
-
-                _dbContext.UsersAdditionalData.Add(additionalData);
-                await _dbContext.SaveChangesAsync();
-
-                var token = GenerationToken(user);
-                return Ok(new AuthResult()
-                {
-                    Result = true,
-                    Token = token
-                });
-            }
-            else
-            {
-                var errors = new List<string>();
-                foreach (var err in isCreate.Errors)
-                    errors.Add(err.Description);
-
-                return BadRequest(new AuthResult()
-                {
-                    Result = false,
-                    Errors = errors
-                });
-            }
-
-            return BadRequest(new AuthResult()
-            {
-                Result = false,
-                Errors = new List<string>()
-        {
-            "Unable to create user"
-            }
-                });
-            }
-
+            var result = await userService.RegisterAsync(requestDto);
+            return result.Result ? Ok(result) : BadRequest(result);
+        }
 
 
         [HttpPost("Login")]
-        public async Task<IActionResult> Login([FromBody] UserLoginRequestDto request) {
-            if (!ModelState.IsValid) return BadRequest();
-
-            //Check if the user with the email exists
-            var existingUser = await _userManager.FindByEmailAsync(request.EmailAddress);
-
-            if(existingUser==null)
-                return BadRequest(new AuthResult()
-                {
-                    Result = false,
-                    Errors = new List<string>()
-                    {
-                        "Invalid authentication request"
-                    }
-                });
-
-            var checkUserAndPass= await _userManager.CheckPasswordAsync(existingUser, request.Password);
-            //Si la contaseña no es correcta, devolver un error
-            if (!checkUserAndPass)
-                return BadRequest(new AuthResult()
-                {
-                    Result = false,
-                    Errors = new List<string>()
-                    {
-                        "Invalid authentication request"
-                    }
-                });
-
-            var token = GenerationToken(existingUser);
-            return Ok(new AuthResult()
+        public async Task<IActionResult> Login([FromBody] UserLoginRequestDto request)
+        {
+            var result = await userService.LoginAsync(request);
+            if (result == null || !ModelState.IsValid)
             {
-                Result = true,
-                Token = token
-            });
+                return BadRequest("Contraseña o usuario invalido");
+            }
+
+            return Ok(result);
         }
 
 
-        private string GenerationToken(IdentityUser user) 
-        { 
-            
-            var JwtTokenHandler = new JwtSecurityTokenHandler();
+        //[HttpPost("Register")]
+        //public async Task<IActionResult> Registrer([FromBody] UserRegistrationRequestDto requestDto)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest();
+        //    }
 
-            var key = Encoding.UTF8.GetBytes(_jwtConfig.Secret);
+        //    var emailExists = await _userManager.FindByEmailAsync(requestDto.EmailAddress);
+        //    if (emailExists != null)
+        //    {
+        //        return BadRequest(new AuthResult()
+        //        {
+        //            Result = false,
+        //            Errors = new List<string>()
+        //    {
+        //        "Email already exists"
+        //    }
+        //        });
+        //    }
 
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim("Id", user.Id),
-                    new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                    new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                    new Claim(JwtRegisteredClaimNames.Iat, DateTime.Now.ToUniversalTime().ToString())
+        //    var user = new IdentityUser()
+        //    {
+        //        Email = requestDto.EmailAddress,
+        //        UserName = requestDto.EmailAddress
+        //    };
 
-                }),
-                Expires = DateTime.UtcNow.AddHours(1),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
+        //    var isCreate = await _userManager.CreateAsync(user, requestDto.Password);
 
-            var token = JwtTokenHandler.CreateToken(tokenDescriptor);
+        //    if (isCreate.Succeeded)
+        //    {
+        //        var userDto = new User
+        //        {
+        //            UserId = user.Id,
+        //            Name = requestDto.Name,
+        //            LastName = requestDto.LastName,
+        //            Dni = requestDto.Dni
+        //        };
 
-            return JwtTokenHandler.WriteToken(token);
+        //        _dbContext.User.Add(userDto);
+        //        await _dbContext.SaveChangesAsync();
 
-        }
+        //        var token = GenerationToken(user);
+        //        return Ok(new AuthResult()
+        //        {
+        //            Result = true,
+        //            Token = token
+        //        });
+        //    }
+        //    else
+        //    {
+        //        var errors = new List<string>();
+        //        foreach (var err in isCreate.Errors)
+        //            errors.Add(err.Description);
+
+        //        return BadRequest(new AuthResult()
+        //        {
+        //            Result = false,
+        //            Errors = errors
+        //        });
+        //    }
+
+        ////    return BadRequest(new AuthResult()
+        ////    {
+        ////        Result = false,
+        ////        Errors = new List<string>()
+        ////{
+        ////    "Unable to create user"
+        ////    }
+        ////        });
+        //    }
+
+
 
 
     }
