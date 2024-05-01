@@ -8,18 +8,19 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Domain\Domain.csproj" />
+    <ProjectReference Include="..\Infraestructure\Infraestructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Interfaces\" />
     <Folder Include="Models\" />
     <Folder Include="Util\" />
     <Folder Include="Response\" />
-    <Folder Include="UseCase\" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.4" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.5.1" />
+    <PackageReference Include="XAct.Core.PCL" Version="0.0.5014" />
   </ItemGroup>
 
 </Project>
