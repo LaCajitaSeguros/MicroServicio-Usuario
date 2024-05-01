@@ -4,6 +4,7 @@ using Domain.Entities;
 using Infraestructure.Repository;
 using Application.Validation;
 using Microsoft.AspNetCore.Identity;
+using XAct;
 
 namespace Application.Service.ServiceImpl
 {
@@ -55,12 +56,14 @@ namespace Application.Service.ServiceImpl
                     return new AuthResult { Result = true, Token = token };
                 }
                 else
-                {
-                    // Manejar errores si es necesario
-                    return new AuthResult { Result = false };
-                }
+            {
+                var errors = new List<string>();
+                foreach (var err in result.Errors)
+                    errors.Add(err.Description);
 
+                return new AuthResult { Result = true, Errors = errors };
             }
+        }
 
         public async Task<AuthResult?> LoginAsync(UserLoginRequestDto request)
         {
