@@ -11,6 +11,7 @@ namespace Infraestructure.Command
 {
     public class UserRepository : IUserRepository
     {
+
         private readonly AppDbContext _dbContext;
 
         public UserRepository(AppDbContext dbContext)

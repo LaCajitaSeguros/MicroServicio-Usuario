@@ -1,5 +1,6 @@
 ﻿using Application.Auth;
 using Domain.DTOs;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,6 @@ namespace Application.Service
 
         Task<AuthResult> RegisterAsync(UserRegistrationRequestDto requestDto);
         Task<AuthResult?> LoginAsync(UserLoginRequestDto request);
-
+        Task<IdentityResult> ConfirmEmailAsync(string userId, string code);    
     }
 }

@@ -5,6 +5,10 @@ using Infraestructure.Repository;
 using Application.Validation;
 using Microsoft.AspNetCore.Identity;
 using XAct;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using System.Drawing.Text;
+using Microsoft.AspNetCore.WebUtilities;
+using System.Text;
 
 namespace Application.Service.ServiceImpl
 {
@@ -14,7 +18,9 @@ namespace Application.Service.ServiceImpl
             private readonly IUserRepository _userRepository;
             private readonly IValidation _validation;
 
-        public UserServiceImpl(UserManager<IdentityUser> userManager, IUserRepository userRepository, IValidation validation)
+
+        public UserServiceImpl(UserManager<IdentityUser> userManager, IUserRepository userRepository
+            , IValidation validation)
             {
                 _userManager = userManager;
                 _userRepository = userRepository;
@@ -29,7 +35,7 @@ namespace Application.Service.ServiceImpl
                     return new AuthResult { Result = false
                         , Errors = new List<string> { "Email already exists" } };
                 }
-
+               
                 var user = new IdentityUser
                 {
                     Email = requestDto.EmailAddress,
@@ -52,8 +58,8 @@ namespace Application.Service.ServiceImpl
 
                     await _userRepository.AddUserAsync(userDto);
 
-                    var token = _validation.GenerationToken(user);
-                    return new AuthResult { Result = true, Token = token };
+                    //var token = _validation.GenerationToken(user);
+                    return new AuthResult { Result = true };
                 }
                 else
             {
@@ -73,6 +79,14 @@ namespace Application.Service.ServiceImpl
             {
                 return null;
             }
+
+            if (!existingUser.EmailConfirmed)
+                return (new AuthResult
+                {
+                    Result = false,
+                    Errors = new List<string> { "Email needs to be confirmed" }
+                });
+
             // Verificar si la contraseña es correcta
             var checkUserAndPass = await _userManager.CheckPasswordAsync(existingUser, request.Password);
             if (!checkUserAndPass)
@@ -84,6 +98,23 @@ namespace Application.Service.ServiceImpl
             var token = _validation.GenerationToken(existingUser);
             return new AuthResult { Result = true, Token = token };
         }
+
+
+        public async Task<IdentityResult> ConfirmEmailAsync(string userId, string code)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                // You might want to handle this differently, maybe return a different result or log it
+                throw new InvalidOperationException($"Unable to load user with Id '{userId}'.");
+            }
+
+            code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code));
+
+            var result = await _userManager.ConfirmEmailAsync(user, code);
+            return result;
+        }
+
 
     }
 }
