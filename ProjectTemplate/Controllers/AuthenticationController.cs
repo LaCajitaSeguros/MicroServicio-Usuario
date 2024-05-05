@@ -101,17 +101,33 @@ namespace Autenticacion.Controllers
         private async Task SendVerificationEmail(IdentityUser user)
         {
             var verificationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var varificationCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(verificationToken));
-
-            //example: https://localhost:8080/api/Authentication/VerifyEmail?userId=prueba&code=prueba
+            var verificationCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(verificationToken));
+            
+            // URL de confirmación de correo electrónico con el código de verificación
             var callBackUrl = $@"{Request.Scheme}://{Request.Host}{Url.Action("ConfirmEmail", controller: "Authentication",
-                               new { userId = user.Id, code = varificationCode })}";
+                                    new { userId = user.Id, code = verificationCode })}";
 
-            var emailBody = $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callBackUrl)}'" +
-                $">clicking here</a>";
+            // URL del logotipo de Cajita Seguros
+            var imageUrl = "https://www.rua-asistencia.com.py/wp-content/uploads/sites/18/2021/09/1630702216674-1080x628.jpg";
 
-            await _emailSender.SendEmailAsync(user.Email, "Confirm your email", emailBody);
+            // Cuerpo del correo electrónico con la imagen incrustada y el enlace de confirmación
+            var emailBody = $@"
+                <p>¡Bienvenido/a a Cajita Seguros!</p>
+                <p>Por favor, confirma tu cuenta haciendo clic en el siguiente botón:</p>
+                <p><a href='{HtmlEncoder.Default.Encode(callBackUrl)}'><button style='background-color: #4CAF50; /* Green */
+                border: none;
+                color: white;
+                padding: 15px 32px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 16px;'>Confirmar tu cuenta</button></a></p>
+                <p>También puedes escanear el siguiente código QR:</p>
+                <p><img src='{imageUrl}' alt='Cajita Seguros Logo'></p>
+                <p>Gracias por unirte a Cajita Seguros.</p>";
 
+            // Envía el correo electrónico de confirmación
+            await _emailSender.SendEmailAsync(user.Email, "Confirmar tu cuenta en Cajita Seguros", emailBody);
         }
 
 
