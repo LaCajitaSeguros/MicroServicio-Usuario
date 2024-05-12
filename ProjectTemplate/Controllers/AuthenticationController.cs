@@ -22,7 +22,7 @@ namespace Autenticacion.Controllers
     public class AuthenticationController : Controller
     {
         //Maneja la autenticación de usuarios
-        private readonly IUserService _userService;
+        private readonly IUserService userService;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IEmailSender _emailSender;
 
@@ -30,7 +30,7 @@ namespace Autenticacion.Controllers
         {
             _userManager = userManager;
             _emailSender = emailSender;
-            this.userService = userService;  // preguntar a enzo xq lo pone con this? para aprender 
+            this.userService = userService;  
 
         }
 
@@ -65,7 +65,7 @@ namespace Autenticacion.Controllers
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] UserLoginRequestDto request)
         {
-            var result = await _userService.LoginAsync(request);
+            var result = await userService.LoginAsync(request);
             if (result == null || !ModelState.IsValid)
             {
                 return BadRequest("Contraseña o usuario invalido");
@@ -84,7 +84,7 @@ namespace Autenticacion.Controllers
                     Errors = new List<string> { "Invalid email confirmation url" }
                 });
 
-            var result = await _userService.ConfirmEmailAsync(userId, code);
+            var result = await userService.ConfirmEmailAsync(userId, code);
 
             if (result.Succeeded)
             {
@@ -135,28 +135,7 @@ namespace Autenticacion.Controllers
         [HttpPost("ForgotPassword")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto request)
         {
-            //if (!ModelState.IsValid)
-            //{
-            //    return BadRequest();
-            //}
-
-
-
-
-            //var result = await userService.ForgotPasswordAsync(request.EmailAddress);
-
-            //if (result)
-            //{
-            //    return Ok("Se ha enviado un correo electrónico con instrucciones para restablecer su contraseña.");
-
-            //}
-            //else
-            //{
-            //    return BadRequest("No se pudo procesar la solicitud de restablecimiento contraseña.");
-
-            //}
-
-
+            
 
             if (!ModelState.IsValid)
             {
