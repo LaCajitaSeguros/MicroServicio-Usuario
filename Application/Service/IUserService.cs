@@ -14,6 +14,7 @@ namespace Application.Service
 
         Task<AuthResult> RegisterAsync(UserRegistrationRequestDto requestDto);
         Task<AuthResult?> LoginAsync(UserLoginRequestDto request);
-        Task<IdentityResult> ConfirmEmailAsync(string userId, string code);    
+        Task<IdentityResult> ConfirmEmailAsync(string userId, string code);
+        Task<bool> ForgotPasswordAsync(string emailAddress);
     }
 }

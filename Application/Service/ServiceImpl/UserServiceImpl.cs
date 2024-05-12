@@ -9,26 +9,36 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using System.Drawing.Text;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Text;
+using System.Web;
 
 namespace Application.Service.ServiceImpl
 {
     public class UserServiceImpl : IUserService
     {
-            private readonly UserManager<IdentityUser> _userManager;
-            private readonly IUserRepository _userRepository;
-            private readonly IValidation _validation;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly IUserRepository _userRepository;
+        private readonly IValidation _validation;
+        private readonly IEmailSender _emailSender;
 
-
-        public UserServiceImpl(UserManager<IdentityUser> userManager, IUserRepository userRepository
-            , IValidation validation)
-            {
-                _userManager = userManager;
-                _userRepository = userRepository;
-                _validation = validation;
-
+        public UserServiceImpl(UserManager<IdentityUser> userManager, IUserRepository userRepository, IValidation validation, IEmailSender emailSender)
+        {
+            _userManager = userManager;
+            _userRepository = userRepository;
+            _validation = validation;
+            _emailSender = emailSender;
         }
 
-            public async Task<AuthResult> RegisterAsync(UserRegistrationRequestDto requestDto)
+
+        //public UserServiceImpl(UserManager<IdentityUser> userManager, IUserRepository userRepository
+        //    , IValidation validation)
+        //    {
+        //        _userManager = userManager;
+        //        _userRepository = userRepository;
+        //        _validation = validation;
+
+        //}
+
+        public async Task<AuthResult> RegisterAsync(UserRegistrationRequestDto requestDto)
             {
                 if (await _userManager.FindByEmailAsync(requestDto.EmailAddress) != null)
                 {
@@ -115,6 +125,25 @@ namespace Application.Service.ServiceImpl
             return result;
         }
 
+        public async Task<bool> ForgotPasswordAsync(string emailAddress)
+        {
+            var user = await _userManager.FindByEmailAsync(emailAddress);
+            if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+            {
+                // Usuario no encontrado o correo electrónico no confirmado
+                return false;
+            }
 
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var callbackUrl = $"https://yourapp.com/reset-password?email={HttpUtility.UrlEncode(emailAddress)}&token={HttpUtility.UrlEncode(resetToken)}";
+
+            // Construir el cuerpo del correo electrónico
+            var emailBody = $"Para restablecer su contraseña, haga clic en el siguiente enlace: <a href='{callbackUrl}'>Restablecer contraseña</a>";
+
+            // Enviar el correo electrónico
+            await _emailSender.SendEmailAsync(emailAddress, "Restablecer contraseña", emailBody);
+
+            return true;
+        }
     }
 }
