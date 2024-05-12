@@ -22,7 +22,7 @@ namespace Autenticacion.Controllers
     public class AuthenticationController : Controller
     {
         //Maneja la autenticación de usuarios
-        private readonly IUserService userService;
+        private readonly IUserService _userService;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IEmailSender _emailSender;
 
@@ -65,7 +65,7 @@ namespace Autenticacion.Controllers
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] UserLoginRequestDto request)
         {
-            var result = await userService.LoginAsync(request);
+            var result = await _userService.LoginAsync(request);
             if (result == null || !ModelState.IsValid)
             {
                 return BadRequest("Contraseña o usuario invalido");
@@ -84,7 +84,7 @@ namespace Autenticacion.Controllers
                     Errors = new List<string> { "Invalid email confirmation url" }
                 });
 
-            var result = await userService.ConfirmEmailAsync(userId, code);
+            var result = await _userService.ConfirmEmailAsync(userId, code);
 
             if (result.Succeeded)
             {
