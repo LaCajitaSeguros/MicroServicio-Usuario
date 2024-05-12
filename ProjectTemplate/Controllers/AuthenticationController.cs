@@ -30,35 +30,35 @@ namespace Autenticacion.Controllers
         {
             _userManager = userManager;
             _emailSender = emailSender;
-            this.userService = userService;
+            this.userService = userService;  // preguntar a enzo xq lo pone con this? para aprender 
 
         }
 
 
-    [HttpPost("Register")]
+        [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] UserRegistrationRequestDto requestDto)
-    {
-        if (!ModelState.IsValid)
         {
-            return BadRequest();
-        }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
 
-        var result = await userService.RegisterAsync(requestDto);
+            var result = await userService.RegisterAsync(requestDto);
 
-        if (result.Result)
-        {
-            // Obtén el usuario registrado del resultado
-            IdentityUser user = await _userManager.FindByEmailAsync(requestDto.EmailAddress);
-        
-            // Envía el correo de verificación
-            await SendVerificationEmail(user);
+            if (result.Result)
+            {
+                // Obtén el usuario registrado del resultado
+                IdentityUser user = await _userManager.FindByEmailAsync(requestDto.EmailAddress);
 
-            return Ok(result);
-        }
-        else
-        {
-            return BadRequest(result);
-        }
+                // Envía el correo de verificación
+                await SendVerificationEmail(user);
+
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
 
         }
 
@@ -95,14 +95,14 @@ namespace Autenticacion.Controllers
                 var status = "Error confirming your email";
                 return BadRequest(status);
             }
-       
+
         }
 
         private async Task SendVerificationEmail(IdentityUser user)
         {
             var verificationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var verificationCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(verificationToken));
-            
+
             // URL de confirmación de correo electrónico con el código de verificación
             var callBackUrl = $@"{Request.Scheme}://{Request.Host}{Url.Action("ConfirmEmail", controller: "Authentication",
                                     new { userId = user.Id, code = verificationCode })}";
@@ -131,5 +131,61 @@ namespace Autenticacion.Controllers
         }
 
 
+
+        [HttpPost("ForgotPassword")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto request)
+        {
+            //if (!ModelState.IsValid)
+            //{
+            //    return BadRequest();
+            //}
+
+
+
+
+            //var result = await userService.ForgotPasswordAsync(request.EmailAddress);
+
+            //if (result)
+            //{
+            //    return Ok("Se ha enviado un correo electrónico con instrucciones para restablecer su contraseña.");
+
+            //}
+            //else
+            //{
+            //    return BadRequest("No se pudo procesar la solicitud de restablecimiento contraseña.");
+
+            //}
+
+
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
+            var callbackUrl = GetResetPasswordUrl(request.EmailAddress);
+
+            var result = await userService.ForgotPasswordAsync(request.EmailAddress, callbackUrl);
+
+            if (result)
+            {
+                return Ok("Se ha enviado un correo electrónico con instrucciones para restablecer su contraseña.");
+            }
+            else
+            {
+                return BadRequest("No se pudo procesar la solicitud de restablecimiento contraseña.");
+            }
+
+        }
+
+        private string GetResetPasswordUrl(string emailAddress)
+        {
+            var callbackUrl = $@"{Request.Scheme}://{Request.Host}{Url.Action("ResetPassword", "Authentication",
+                                    new { emailAddress = emailAddress })}";
+            return callbackUrl;
+        }
+
+
     }
+    
 }
