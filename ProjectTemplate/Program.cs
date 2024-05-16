@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using XAct;
 using static Application.Validation.IValidation;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +21,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddCors(p=> p.AddPolicy("PolicyCors",build
+    =>{ 
+        build.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
+
+    }));
+
 builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("JwtConfig"));
 
 builder.Services.AddAuthentication(option =>
@@ -68,6 +75,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("PolicyCors");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
