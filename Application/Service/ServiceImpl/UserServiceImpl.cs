@@ -23,7 +23,7 @@ namespace Application.Service.ServiceImpl
         private readonly IUserRepository _userRepository;
         private readonly IValidation _validation;
         private readonly IEmailSender _emailSender;
-
+        private static Dictionary<string, (string Code, DateTime Expiration)> verificationCodes = new Dictionary<string, (string Code, DateTime Expiration)>();
         public UserServiceImpl(UserManager<IdentityUser> userManager, IUserRepository userRepository, IValidation validation, IEmailSender emailSender)
         {
             _userManager = userManager;
@@ -119,49 +119,194 @@ namespace Application.Service.ServiceImpl
             return result;
         }
 
+        //con token
 
-        public async Task<bool> ForgotPasswordAsync(string emailAddress, string callback)
+        //public async Task<bool> SendVerificationTokenAsync(string emailAddress)
+        //{
+        //    var user = await _userManager.FindByEmailAsync(emailAddress);
+        //    if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+        //    {
+        //        // Usuario no encontrado o correo electrónico no confirmado
+        //        return false;
+        //    }
+
+        //    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+        //    var emailBody = $"Su código de verificación para restablecer la contraseña es: {token}";
+        //    await _emailSender.SendEmailAsync(emailAddress, "Código de Verificación", emailBody);
+
+        //    return true;
+        //}
+
+        //public async Task<bool> VerifyAndResetPasswordAsync(string emailAddress, string token, string newPassword)
+        //{
+        //    var user = await _userManager.FindByEmailAsync(emailAddress);
+        //    if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+        //    {
+        //        // Usuario no encontrado o correo electrónico no confirmado
+        //        return false;
+        //    }
+
+        //    var resetResult = await _userManager.ResetPasswordAsync(user, token, newPassword);
+        //    if (!resetResult.Succeeded)
+        //    {
+        //        return false;
+        //    }
+
+        //    return true;
+        //}
+
+
+        //con codigo sin errores especificos
+        ////public static string GenerateVerificationCode(string email)
+        ////{
+        ////    const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        ////    var random = new Random();
+        ////    string code = new string(Enumerable.Repeat(chars, 6)
+        ////        .Select(s => s[random.Next(s.Length)]).ToArray());
+
+        ////    verificationCodes[email] = (code, DateTime.Now.AddMinutes(15));
+
+        ////    return code;
+        ////}
+
+        ////public static bool VerifyCode(string email, string code)
+        ////{
+        ////    if (verificationCodes.TryGetValue(email, out var value))
+        ////    {
+        ////        if (value.Expiration > DateTime.Now && value.Code == code)
+        ////        {
+        ////            verificationCodes.Remove(email);
+        ////            return true;
+        ////        }
+        ////    }
+        ////    return false;
+        ////}
+
+        ////public async Task<bool> GenerateAndSendVerificationCodeAsync(string emailAddress)
+        ////{
+        ////    var user = await _userManager.FindByEmailAsync(emailAddress);
+        ////    if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+        ////    {
+        ////        return false;
+        ////    }
+
+        ////    var code = GenerateVerificationCode(emailAddress);
+
+        ////    if (!string.IsNullOrEmpty(code))
+        ////    {
+        ////        var emailBody = $"Su código de verificación para restablecer la contraseña es: {code}";
+        ////        await _emailSender.SendEmailAsync(emailAddress, "Código de Verificación", emailBody);
+
+        ////        return true;
+        ////    }
+        ////    else
+        ////    {
+        ////        return false;
+        ////    }
+        ////}
+
+        ////public async Task<bool> VerifyAndResetPasswordAsync(string emailAddress, string code, string newPassword)
+        ////{
+        ////    var user = await _userManager.FindByEmailAsync(emailAddress);
+        ////    if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+        ////    {
+        ////        return false;
+        ////    }
+
+        ////    if (!VerifyCode(emailAddress, code))
+        ////    {
+        ////        return false; 
+        ////    }
+
+        ////    var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+        ////    var resetResult = await _userManager.ResetPasswordAsync(user, resetToken, newPassword);
+        ////    if (!resetResult.Succeeded)
+        ////    {
+        ////        return false;
+        ////    }
+
+        ////    return true;
+        ////}
+        ///
+        public static string GenerateVerificationCode(string email)
         {
-            //var user = await _userManager.FindByEmailAsync(emailAddress);
-            //if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
-            //{
-            //    // Usuario no encontrado o correo electrónico no confirmado
-            //    return false;
-            //}
-            //var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
-            //var callbackUrl = $"https://yourapp.com/reset-password?email={HttpUtility.UrlEncode(emailAddress)}&token={HttpUtility.UrlEncode(resetToken)}";
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var random = new Random();
+            string code = new string(Enumerable.Repeat(chars, 6)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
 
-            ////var callBackUrl2 = $@"{Request.Scheme}://{Request.Host}{Url.Action("ConfirmEmail", controller: "Authentication",
-            ////                      new { userId = user.Id, code = verificationCode })}";
+            verificationCodes[email] = (code, DateTime.Now.AddMinutes(15));
 
-
-
-            //// Construir el cuerpo del correo electrónico
-            //var emailBody = $"Para restablecer su contraseña, haga clic en el siguiente enlace: <a href='{callbackUrl}'>Restablecer contraseña</a>";
-            //// Enviar el correo electrónico
-            //await _emailSender.SendEmailAsync(emailAddress, "Restablecer contraseña", emailBody);
-
-            //return true;
-
-
-            var user = await _userManager.FindByEmailAsync(emailAddress);
-            if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
-            {
-                // Usuario no encontrado o correo electrónico no confirmado
-                return false;
-            }
-            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var resetUrl = $"{callback}?email={HttpUtility.UrlEncode(emailAddress)}&token={HttpUtility.UrlEncode(resetToken)}";
-
-            // Construir el cuerpo del correo electrónico
-            var emailBody = $"Para restablecer su contraseña, haga clic en el siguiente enlace: <a href='{resetUrl}'>Restablecer contraseña</a>";
-            // Enviar el correo electrónico
-            await _emailSender.SendEmailAsync(emailAddress, "Restablecer contraseña", emailBody);
-
-            return true;
-
-
+            return code;
         }
 
+        public static bool VerifyCode(string email, string code)
+        {
+            if (verificationCodes.TryGetValue(email, out var value))
+            {
+                if (value.Expiration > DateTime.Now && value.Code == code)
+                {
+                    verificationCodes.Remove(email);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public async Task<(bool IsSuccess, string ErrorMessage)> GenerateAndSendVerificationCodeAsync(string emailAddress)
+        {
+            var user = await _userManager.FindByEmailAsync(emailAddress);
+            if (user == null)
+            {
+                return (false, "El correo electrónico no está registrado.");
+            }
+            if (!await _userManager.IsEmailConfirmedAsync(user))
+            {
+                return (false, "El correo electrónico no está confirmado.");
+            }
+
+            var code = GenerateVerificationCode(emailAddress);
+
+            if (!string.IsNullOrEmpty(code))
+            {
+                var emailBody = $"Su código de verificación para restablecer la contraseña es: {code}";
+                await _emailSender.SendEmailAsync(emailAddress, "Código de Verificación", emailBody);
+
+                return (true,"");
+            }
+            else
+            {
+                return (false, "No se pudo generar el código de verificación.");
+            }
+        }
+
+        public async Task<(bool IsSuccess, string ErrorMessage)> VerifyAndResetPasswordAsync(string emailAddress, string code, string newPassword)
+        {
+            var user = await _userManager.FindByEmailAsync(emailAddress);
+            if (user == null)
+            {
+                return (false, "El correo electrónico no está registrado.");
+            }
+            if (!await _userManager.IsEmailConfirmedAsync(user))
+            {
+                return (false, "El correo electrónico no está confirmado.");
+            }
+
+            if (!VerifyCode(emailAddress, code))
+            {
+                return (false, "El código de verificación es incorrecto o ha expirado.");
+            }
+
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var resetResult = await _userManager.ResetPasswordAsync(user, resetToken, newPassword);
+            if (!resetResult.Succeeded)
+            {
+                return (false, "No se pudo restablecer la contraseña. Por favor, asegúrese de que la nueva contraseña cumpla con los requisitos.");
+            }
+
+            return (true, "");
+        }
     }
+
 }

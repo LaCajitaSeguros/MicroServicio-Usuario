@@ -16,8 +16,19 @@ namespace Application.Service
         Task<AuthResult> RegisterAsync(UserRegistrationRequestDto requestDto);
         Task<AuthResult?> LoginAsync(UserLoginRequestDto request);
         Task<IdentityResult> ConfirmEmailAsync(string userId, string code);
-        Task<bool> ForgotPasswordAsync(string emailAddress, string callback);
+        //token
+        //Task<bool> VerifyAndResetPasswordAsync(string emailAddress, string token, string newPassword);
+        //Task<bool> SendVerificationTokenAsync(string emailAddress);
+        //codigo
+        //Task<bool> GenerateAndSendVerificationCodeAsync(string emailAddress);
+        //Task<bool> VerifyAndResetPasswordAsync(string emailAddress, string code, string newPassword);
 
-       
+        Task<(bool IsSuccess, string ErrorMessage)> GenerateAndSendVerificationCodeAsync(string emailAddress);
+        Task<(bool IsSuccess, string ErrorMessage)> VerifyAndResetPasswordAsync(string emailAddress, string code, string newPassword);
+
+
+
+
+
     }
 }
