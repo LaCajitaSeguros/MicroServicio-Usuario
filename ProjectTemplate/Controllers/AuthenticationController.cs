@@ -1,4 +1,4 @@
-﻿using Application.Auth;
+using Application.Auth;
 using Application.Service;
 using Domain.DTOs;
 using Domain.Entities;
@@ -30,35 +30,39 @@ namespace Autenticacion.Controllers
         {
             _userManager = userManager;
             _emailSender = emailSender;
-            this.userService = userService;
+            this.userService = userService;  
 
         }
 
 
-    [HttpPost("Register")]
+        [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] UserRegistrationRequestDto requestDto)
-    {
-        if (!ModelState.IsValid)
         {
-            return BadRequest();
-        }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
 
-        var result = await userService.RegisterAsync(requestDto);
+            var result = await userService.RegisterAsync(requestDto);
 
-        if (result.Result)
-        {
-            // Obtén el usuario registrado del resultado
-            IdentityUser user = await _userManager.FindByEmailAsync(requestDto.EmailAddress);
-        
-            // Envía el correo de verificación
-            await SendVerificationEmail(user);
+            if (result.Result)
+            {
+                // Obtén el usuario registrado del resultado
+                IdentityUser user = await _userManager.FindByEmailAsync(requestDto.EmailAddress);
+                // Si el usuario no se registro por algun error no se envia el correo y retorna null
+                if (user==null) {
+                   return BadRequest(result);
 
-            return Ok(result);
-        }
-        else
-        {
-            return BadRequest(result);
-        }
+                }
+                // Envía el correo de verificación
+                await SendVerificationEmail(user);
+
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest(result);
+            }
 
         }
 
@@ -66,7 +70,7 @@ namespace Autenticacion.Controllers
         public async Task<IActionResult> Login([FromBody] UserLoginRequestDto request)
         {
             var result = await userService.LoginAsync(request);
-            if (result == null || !ModelState.IsValid)
+            if (result == null || result.Equals("false") || !ModelState.IsValid)
             {
                 return BadRequest("Contraseña o usuario invalido");
             }
@@ -95,7 +99,7 @@ namespace Autenticacion.Controllers
                 var status = "Error confirming your email";
                 return BadRequest(status);
             }
-       
+
         }
 
         private async Task SendVerificationEmail(IdentityUser user)
@@ -130,6 +134,130 @@ namespace Autenticacion.Controllers
             await _emailSender.SendEmailAsync(user.Email, "Confirmar tu cuenta en Cajita Seguros", emailBody);
         }
 
+        //verificacion con token
+
+        //[HttpPost("ForgotPassword")]
+        //public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto request)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest();
+        //    }
+
+        //    var result = await userService.SendVerificationTokenAsync(request.EmailAddress);
+
+        //    if (result)
+        //    {
+        //        return Ok("Se ha enviado un código de verificación a su correo electrónico.");
+        //    }
+        //    else
+        //    {
+        //        return BadRequest("No se pudo procesar la solicitud de restablecimiento contraseña.");
+        //    }
+        //}
+
+        //[HttpPost("VerifyAndResetPassword")]
+        //public async Task<IActionResult> VerifyAndResetPassword([FromBody] ResetPasswordRequestDto request)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest();
+        //    }
+
+        //    var result = await userService.VerifyAndResetPasswordAsync(request.EmailAddress, request.Token, request.NewPassword);
+
+        //    if (result)
+        //    {
+        //        return Ok("Su contraseña ha sido restablecida correctamente.");
+        //    }
+        //    else
+        //    {
+        //        return BadRequest("El código de verificación es incorrecto o ha expirado.");
+        //    }
+        //}
+
+        //verificacion con codigo
+
+        ////[HttpPost("ForgotPassword")]
+        ////public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto request)
+        ////{
+        ////    if (!ModelState.IsValid)
+        ////    {
+        ////        return BadRequest("Solicitud inválida.");
+        ////    }
+
+        ////    bool isCodeGenerated = await userService.GenerateAndSendVerificationCodeAsync(request.EmailAddress);
+
+        ////    if (isCodeGenerated)
+        ////    {
+        ////        return Ok("Se ha enviado un código de verificación a su correo electrónico.");
+        ////    }
+        ////    else
+        ////    {
+        ////        return BadRequest("No se pudo procesar la solicitud de restablecimiento contraseña.");
+        ////    }
+        ////}
+
+        ////[HttpPost("VerifyAndResetPassword")]
+        ////public async Task<IActionResult> VerifyAndResetPassword([FromBody] ResetPasswordRequestDto request)
+        ////{
+        ////    if (!ModelState.IsValid)
+        ////    {
+        ////        return BadRequest("Solicitud inválida.");
+        ////    }
+
+        ////    bool isPasswordReset = await userService.VerifyAndResetPasswordAsync(request.EmailAddress, request.VerificationCode, request.NewPassword);
+
+        ////    if (isPasswordReset)
+        ////    {
+        ////        return Ok("Su contraseña ha sido restablecida correctamente.");
+        ////    }
+        ////    else
+        ////    {
+        ////        return BadRequest("El código de verificación es incorrecto o ha expirado.");
+        ////    }
+        ////}
+        ///
+        [HttpPost("ForgotPassword")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Solicitud inválida.");
+            }
+
+            var (isSuccess, errorMessage) = await userService.GenerateAndSendVerificationCodeAsync(request.EmailAddress);
+
+            if (isSuccess)
+            {
+                return Ok("Se ha enviado un código de verificación a su correo electrónico.");
+            }
+            else
+            {
+                return BadRequest(errorMessage);
+            }
+        }
+
+        [HttpPost("VerifyAndResetPassword")]
+        public async Task<IActionResult> VerifyAndResetPassword([FromBody] ResetPasswordRequestDto request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Solicitud inválida.");
+            }
+
+            var (isSuccess, errorMessage) = await userService.VerifyAndResetPasswordAsync(request.EmailAddress, request.VerificationCode, request.NewPassword);
+
+            if (isSuccess)
+            {
+                return Ok("Su contraseña ha sido restablecida correctamente.");
+            }
+            else
+            {
+                return BadRequest(errorMessage);
+            }
+        }
 
     }
+
 }
