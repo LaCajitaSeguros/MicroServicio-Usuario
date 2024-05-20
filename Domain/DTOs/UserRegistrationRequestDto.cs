@@ -19,8 +19,11 @@ namespace Domain.DTOs
         public required string EmailAddress { get; set; }
         [Required]
         public required string Password { get; set; }
-        
-        
+        [Required]
+        public string ConfirmPassword { get; set; }
+
+
+
 
     }
 }
