@@ -49,7 +49,11 @@ namespace Autenticacion.Controllers
             {
                 // Obtén el usuario registrado del resultado
                 IdentityUser user = await _userManager.FindByEmailAsync(requestDto.EmailAddress);
+                // Si el usuario no se registro por algun error no se envia el correo y retorna null
+                if (user==null) {
+                   return BadRequest(result);
 
+                }
                 // Envía el correo de verificación
                 await SendVerificationEmail(user);
 
