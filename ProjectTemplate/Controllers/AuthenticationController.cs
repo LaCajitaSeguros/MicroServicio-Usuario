@@ -1,4 +1,4 @@
-﻿using Application.Auth;
+using Application.Auth;
 using Application.Service;
 using Domain.DTOs;
 using Domain.Entities;
