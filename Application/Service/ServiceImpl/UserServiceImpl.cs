@@ -39,6 +39,17 @@ namespace Application.Service.ServiceImpl
                 return new AuthResult { Result = false
                     , Errors = new List<string> { "Email already exists" } };
             }
+           
+            if (requestDto.Password != requestDto.ConfirmPassword)
+            {
+                return new AuthResult
+                {
+                    Result = false,
+                    Errors = new List<string> { "Passwords do not match" }
+                };
+            }
+
+
 
             var user = new IdentityUser
             {

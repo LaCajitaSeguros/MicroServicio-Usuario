@@ -70,7 +70,7 @@ namespace Autenticacion.Controllers
         public async Task<IActionResult> Login([FromBody] UserLoginRequestDto request)
         {
             var result = await userService.LoginAsync(request);
-            if (result == null || !ModelState.IsValid)
+            if (result == null || result.Equals("false") || !ModelState.IsValid)
             {
                 return BadRequest("Contraseña o usuario invalido");
             }
