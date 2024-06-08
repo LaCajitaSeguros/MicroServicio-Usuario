@@ -70,7 +70,7 @@ namespace Autenticacion.Controllers
         public async Task<IActionResult> Login([FromBody] UserLoginRequestDto request)
         {
             var result = await userService.LoginAsync(request);
-            if (result == null || result.Equals("false") || !ModelState.IsValid)
+            if (result == null || result.Token==null || !ModelState.IsValid)
             {
                 return BadRequest("Contraseña o usuario invalido");
             }
@@ -255,6 +255,21 @@ namespace Autenticacion.Controllers
             else
             {
                 return BadRequest(errorMessage);
+            }
+        }
+
+
+        [HttpPost("CheckEmail")]
+        public async Task<IActionResult> CheckEmail([FromBody] CheckEmailRequestDto requestDto)
+        {
+            var user = await _userManager.FindByEmailAsync(requestDto.EmailAddress);
+            if (user != null)
+            {
+                return Ok(new { exists = true });
+            }
+            else
+            {
+                return Ok(new { exists = false });
             }
         }
 
