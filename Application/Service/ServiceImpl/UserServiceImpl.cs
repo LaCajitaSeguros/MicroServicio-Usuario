@@ -49,31 +49,87 @@ namespace Application.Service.ServiceImpl
                 };
             }
 
+            var verificationCode = GenerateVerificationCode(requestDto.EmailAddress);
 
+            var emailBody = $"Su código de verificación para el registro es: {verificationCode}";
+            await _emailSender.SendEmailAsync(requestDto.EmailAddress, "Código de Verificación", emailBody);
+
+            return new AuthResult { Result = true, Message = "Verification code sent to email." };
+
+
+
+            //var user = new IdentityUser
+            //{
+            //    Email = requestDto.EmailAddress,
+            //    UserName = requestDto.EmailAddress
+            //};
+
+            //var result = await _userManager.CreateAsync(user, requestDto.Password);
+
+
+
+            //if (result.Succeeded)
+            //{
+            //    var userDto = new User
+            //    {
+            //        UserId = user.Id,
+            //        Name = requestDto.Name,
+            //        LastName = requestDto.LastName,
+            //        Dni = requestDto.Dni,
+            //        EmailAddress = requestDto.EmailAddress,
+            //        Password = _validation.HashPassword(requestDto.Password),
+                   
+            //    };
+
+            //    await _userRepository.AddUserAsync(userDto);
+
+            //    //var token = _validation.GenerationToken(user);
+            //    return new AuthResult { Result = true };
+            //}
+            //else
+            //{
+            //    var errors = new List<string>();
+            //    foreach (var err in result.Errors)
+            //        errors.Add(err.Description);
+
+            //    return new AuthResult { Result = true, Errors = errors };
+            //}
+        }
+
+
+        public async Task<AuthResult> VerifyCodeAndCompleteRegistrationAsync(VerifyCodeRequestDto verifyCodeRequestDto)
+        {
+            if (!VerifyCode(verifyCodeRequestDto.EmailAddress, verifyCodeRequestDto.Code))
+            {
+                return new AuthResult
+                {
+                    Result = false,
+                    Errors = new List<string> { "Invalid verification code or it has expired." }
+                };
+            }
 
             var user = new IdentityUser
             {
-                Email = requestDto.EmailAddress,
-                UserName = requestDto.EmailAddress
+                Email = verifyCodeRequestDto.EmailAddress,
+                UserName = verifyCodeRequestDto.EmailAddress
             };
 
-            var result = await _userManager.CreateAsync(user, requestDto.Password);
+            var result = await _userManager.CreateAsync(user, verifyCodeRequestDto.Password);
 
             if (result.Succeeded)
             {
                 var userDto = new User
                 {
                     UserId = user.Id,
-                    Name = requestDto.Name,
-                    LastName = requestDto.LastName,
-                    Dni = requestDto.Dni,
-                    EmailAddress = requestDto.EmailAddress,
-                    Password = _validation.HashPassword(requestDto.Password)
+                    Name = verifyCodeRequestDto.Name,
+                    LastName = verifyCodeRequestDto.LastName,
+                    Dni = verifyCodeRequestDto.Dni,
+                    EmailAddress = verifyCodeRequestDto.EmailAddress,
+                    Password = _validation.HashPassword(verifyCodeRequestDto.Password)
                 };
 
                 await _userRepository.AddUserAsync(userDto);
 
-                //var token = _validation.GenerationToken(user);
                 return new AuthResult { Result = true };
             }
             else
@@ -82,7 +138,7 @@ namespace Application.Service.ServiceImpl
                 foreach (var err in result.Errors)
                     errors.Add(err.Description);
 
-                return new AuthResult { Result = true, Errors = errors };
+                return new AuthResult { Result = false, Errors = errors };
             }
         }
 
