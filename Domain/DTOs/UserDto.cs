@@ -9,6 +9,6 @@ namespace Autenticacion.Controllers
         public string Name { get; set; }
         public string LastName { get; set; }
         public string Dni { get; set; }
-        public string Code { get; set; }// revisar si va
+        public string Code { get; set; }
     }
 }

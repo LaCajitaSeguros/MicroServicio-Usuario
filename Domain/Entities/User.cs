@@ -18,5 +18,6 @@ namespace Domain.Entities
         public required string Dni { get; set; }
         public  string EmailAddress { get; set; }
         public  string Password { get; set; }
+        public string Code { get; set; }
     }
 }

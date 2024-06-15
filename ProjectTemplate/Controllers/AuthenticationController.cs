@@ -45,17 +45,20 @@ namespace Autenticacion.Controllers
 
             var result = await userService.RegisterAsync(requestDto);
 
+
+
             if (result.Result)
             {
                 // Obtén el usuario registrado del resultado
                 IdentityUser user = await _userManager.FindByEmailAsync(requestDto.EmailAddress);
                 // Si el usuario no se registro por algun error no se envia el correo y retorna null
-                if (user==null) {
-                   return BadRequest(result);
+                if (user == null)
+                {
+                    return BadRequest(result);
 
                 }
-                // Envía el correo de verificación
-                await SendVerificationEmail(user);
+                 //Envía el correo de verificación
+               // await SendVerificationEmail(user);
 
                 return Ok(result);
             }
@@ -64,7 +67,39 @@ namespace Autenticacion.Controllers
                 return BadRequest(result);
             }
 
+
+            //if (result.Result)
+            //{
+            //    return Ok(result);
+            //}
+            //else
+            //{
+            //    return BadRequest(result);
+            //}
+
+
         }
+
+        [HttpPost("VerifyRegistration")]
+        public async Task<IActionResult> VerifyRegistration([FromBody] string code)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Solicitud inválida.");
+            }
+
+            var (isSuccess, errorMessage) = await userService.VerifyCodeAsync(code);
+
+            if (isSuccess)
+            {
+                return Ok("Código verificado correctamente. Registro completo.");
+            }
+            else
+            {
+                return BadRequest(errorMessage);
+            }
+        }
+
 
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] UserLoginRequestDto request)
@@ -108,6 +143,10 @@ namespace Autenticacion.Controllers
             var verificationCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(verificationToken));
 
             // URL de confirmación de correo electrónico con el código de verificación
+            
+            //falta cambiar la url para que apunte al post de Codeverification
+
+
             var callBackUrl = $@"{Request.Scheme}://{Request.Host}{Url.Action("ConfirmEmail", controller: "Authentication",
                                     new { userId = user.Id, code = verificationCode })}";
 

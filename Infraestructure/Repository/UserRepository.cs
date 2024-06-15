@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infraestructure.Command
 {
@@ -23,6 +24,13 @@ namespace Infraestructure.Command
         {
             _dbContext.User.Add(user);
             await _dbContext.SaveChangesAsync();
+        }
+
+
+        public async Task<User>GetByCodeAsync(string code)
+        {
+            return await _dbContext.User.FirstOrDefaultAsync(c => c.Code == code);
+
         }
 
 

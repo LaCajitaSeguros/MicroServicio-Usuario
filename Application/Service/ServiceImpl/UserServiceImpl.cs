@@ -49,14 +49,39 @@ namespace Application.Service.ServiceImpl
                 };
             }
 
+
+            
+
+
             var verificationCode = GenerateVerificationCode(requestDto.EmailAddress);
 
-            var emailBody = $"Su código de verificación para el registro es: {verificationCode}";
+            var emailBody = $"Su código de verificación para el registro es : {verificationCode}";
             await _emailSender.SendEmailAsync(requestDto.EmailAddress, "Código de Verificación", emailBody);
+
+
+
+            var verifyCodeRequestDto = new VerifyCodeRequestDto
+            {
+                EmailAddress = requestDto.EmailAddress,
+                Code = verificationCode,
+                Password = requestDto.Password,
+                Name = requestDto.Name,
+                LastName = requestDto.LastName,
+                Dni = requestDto.Dni
+            };
+
+            var verifyResult = await VerifyCodeAndCompleteRegistrationAsync(verifyCodeRequestDto);
+
+            if (!verifyResult.Result)
+            {
+                return new AuthResult { Result = false, Errors = verifyResult.Errors };
+            }
 
             return new AuthResult { Result = true, Message = "Verification code sent to email." };
 
 
+   
+           
 
             //var user = new IdentityUser
             //{
@@ -78,7 +103,7 @@ namespace Application.Service.ServiceImpl
             //        Dni = requestDto.Dni,
             //        EmailAddress = requestDto.EmailAddress,
             //        Password = _validation.HashPassword(requestDto.Password),
-                   
+
             //    };
 
             //    await _userRepository.AddUserAsync(userDto);
@@ -98,7 +123,10 @@ namespace Application.Service.ServiceImpl
 
 
         public async Task<AuthResult> VerifyCodeAndCompleteRegistrationAsync(VerifyCodeRequestDto verifyCodeRequestDto)
+        
         {
+
+
             if (!VerifyCode(verifyCodeRequestDto.EmailAddress, verifyCodeRequestDto.Code))
             {
                 return new AuthResult
@@ -125,7 +153,8 @@ namespace Application.Service.ServiceImpl
                     LastName = verifyCodeRequestDto.LastName,
                     Dni = verifyCodeRequestDto.Dni,
                     EmailAddress = verifyCodeRequestDto.EmailAddress,
-                    Password = _validation.HashPassword(verifyCodeRequestDto.Password)
+                    Password = _validation.HashPassword(verifyCodeRequestDto.Password),
+                    Code = verifyCodeRequestDto.Code
                 };
 
                 await _userRepository.AddUserAsync(userDto);
@@ -263,6 +292,27 @@ namespace Application.Service.ServiceImpl
             }
 
             return (true, "");
+        }
+
+
+
+        public async Task<(bool isSuccess, string? errorMessage)> VerifyCodeAsync(string code)
+        {
+            var verificationEntry = await _userRepository.GetByCodeAsync(code);
+            
+            if (verificationEntry == null)
+            {
+                return (false, "El código es incorrecto o ha expirado.");
+            }
+            // Marca el usuario como verificado, si tienes una propiedad para eso.
+            var user = await _userManager.FindByEmailAsync(verificationEntry.EmailAddress);
+            if (user != null)
+            {
+                user.EmailConfirmed = true;
+                await _userManager.UpdateAsync(user);
+            }
+
+            return (true, null);
         }
     }
 
