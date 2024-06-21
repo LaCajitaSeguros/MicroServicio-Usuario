@@ -50,31 +50,85 @@ namespace Application.Service.ServiceImpl
             }
 
 
+            var verificationCode = GenerateVerificationCode(requestDto.EmailAddress);
+
+            var emailBody = $@"
+            <p>Estimado/a,</p>
+            <p>¡Bienvenido/a a CajitaSeguros!</p>
+            <p>Nos complace tenerlo/a con nosotros. Su código de verificación para el registro es: <strong>{verificationCode}</strong></p>
+            <p>Por favor, ingrese este código en la página de registro para completar su inscripción.</p>
+            <p>Si tiene alguna pregunta o necesita asistencia, no dude en contactarnos.</p>
+            <p>Gracias por elegir CajitaSeguros.</p>
+            <p>Saludos cordiales,<br/>El equipo de CajitaSeguros</p>";
+
+            await _emailSender.SendEmailAsync(requestDto.EmailAddress, "Bienvenido a CajitaSeguros - Código de Verificación", emailBody);
+
+
+
+            var verifyCodeRequestDto = new VerifyCodeRequestDto
+            {
+                EmailAddress = requestDto.EmailAddress,
+                Code = verificationCode,
+                Password = requestDto.Password,
+                Name = requestDto.Name,
+                LastName = requestDto.LastName,
+                Dni = requestDto.Dni
+            };
+
+            var verifyResult = await VerifyCodeAndCompleteRegistrationAsync(verifyCodeRequestDto);
+
+            if (!verifyResult.Result)
+            {
+                return new AuthResult { Result = false, Errors = verifyResult.Errors };
+            }
+
+            return new AuthResult { Result = true, Message = "Verification code sent to email." 
+                , UserId=verifyResult.UserId,Name=verifyResult.Name,LastName=verifyResult.LastName};
+
+
+
+
+        }
+
+
+        public async Task<AuthResult> VerifyCodeAndCompleteRegistrationAsync(VerifyCodeRequestDto verifyCodeRequestDto)
+        
+        {
+
+
+            if (!VerifyCode(verifyCodeRequestDto.EmailAddress, verifyCodeRequestDto.Code))
+            {
+                return new AuthResult
+                {
+                    Result = false,
+                    Errors = new List<string> { "Invalid verification code or it has expired." }
+                };
+            }
 
             var user = new IdentityUser
             {
-                Email = requestDto.EmailAddress,
-                UserName = requestDto.EmailAddress
+                Email = verifyCodeRequestDto.EmailAddress,
+                UserName = verifyCodeRequestDto.EmailAddress
             };
 
-            var result = await _userManager.CreateAsync(user, requestDto.Password);
+            var result = await _userManager.CreateAsync(user, verifyCodeRequestDto.Password);
 
             if (result.Succeeded)
             {
                 var userDto = new User
                 {
                     UserId = user.Id,
-                    Name = requestDto.Name,
-                    LastName = requestDto.LastName,
-                    Dni = requestDto.Dni,
-                    EmailAddress = requestDto.EmailAddress,
-                    Password = _validation.HashPassword(requestDto.Password)
+                    Name = verifyCodeRequestDto.Name,
+                    LastName = verifyCodeRequestDto.LastName,
+                    Dni = verifyCodeRequestDto.Dni,
+                    EmailAddress = verifyCodeRequestDto.EmailAddress,
+                    Password = _validation.HashPassword(verifyCodeRequestDto.Password),
+                    Code = verifyCodeRequestDto.Code
                 };
 
                 await _userRepository.AddUserAsync(userDto);
 
-                //var token = _validation.GenerationToken(user);
-                return new AuthResult { Result = true };
+                return new AuthResult { Result = true, UserId = userDto.UserId,Name=userDto.Name,LastName=userDto.LastName};
             }
             else
             {
@@ -82,7 +136,7 @@ namespace Application.Service.ServiceImpl
                 foreach (var err in result.Errors)
                     errors.Add(err.Description);
 
-                return new AuthResult { Result = true, Errors = errors };
+                return new AuthResult { Result = false, Errors = errors };
             }
         }
 
@@ -99,7 +153,7 @@ namespace Application.Service.ServiceImpl
                 return (new AuthResult
                 {
                     Result = false,
-                    Errors = new List<string> { "Email needs to be confirmed" }
+                    Errors = new List<string> { "Se debe confirmar el email" }
                 });
 
             // Verificar si la contraseña es correcta
@@ -174,6 +228,7 @@ namespace Application.Service.ServiceImpl
                 var emailBody = $"Su código de verificación para restablecer la contraseña es: {code}";
                 await _emailSender.SendEmailAsync(emailAddress, "Código de Verificación", emailBody);
 
+
                 return (true,"");
             }
             else
@@ -181,6 +236,8 @@ namespace Application.Service.ServiceImpl
                 return (false, "No se pudo generar el código de verificación.");
             }
         }
+
+
 
         public async Task<(bool IsSuccess, string ErrorMessage)> VerifyAndResetPasswordAsync(string emailAddress, string code, string newPassword)
         {
@@ -207,6 +264,27 @@ namespace Application.Service.ServiceImpl
             }
 
             return (true, "");
+        }
+
+
+
+        public async Task<(bool isSuccess, string? errorMessage)> VerifyCodeAsync(string code)
+        {
+            var verificationEntry = await _userRepository.GetByCodeAsync(code);
+            
+            if (verificationEntry == null)
+            {
+                return (false, "El código es incorrecto o ha expirado.");
+            }
+            // Marca el usuario como verificado, si tienes una propiedad para eso.
+            var user = await _userManager.FindByEmailAsync(verificationEntry.EmailAddress);
+            if (user != null)
+            {
+                user.EmailConfirmed = true;
+                await _userManager.UpdateAsync(user);
+            }
+
+            return (true, null);
         }
     }
 

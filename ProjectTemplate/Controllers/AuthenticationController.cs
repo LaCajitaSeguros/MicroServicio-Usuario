@@ -17,7 +17,7 @@ using XAct.Users;
 
 namespace Autenticacion.Controllers
 {
-    [Route("api/[controller]")]
+      [Route("api/[controller]")]
     [ApiController]
     public class AuthenticationController : Controller
     {
@@ -45,17 +45,20 @@ namespace Autenticacion.Controllers
 
             var result = await userService.RegisterAsync(requestDto);
 
+
+
             if (result.Result)
             {
                 // Obtén el usuario registrado del resultado
                 IdentityUser user = await _userManager.FindByEmailAsync(requestDto.EmailAddress);
                 // Si el usuario no se registro por algun error no se envia el correo y retorna null
-                if (user==null) {
-                   return BadRequest(result);
+                if (user == null)
+                {
+                    return BadRequest(result);
 
                 }
-                // Envía el correo de verificación
-                await SendVerificationEmail(user);
+                 //Envía el correo de verificación
+                //await SendVerificationEmail(user);
 
                 return Ok(result);
             }
@@ -65,6 +68,27 @@ namespace Autenticacion.Controllers
             }
 
         }
+
+        [HttpPost("VerifyRegistration")]
+        public async Task<IActionResult> VerifyRegistration([FromBody] string code)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("Solicitud inválida.");
+            }
+
+            var (isSuccess, errorMessage) = await userService.VerifyCodeAsync(code);
+
+            if (isSuccess)
+            {
+                return Ok(new { message = "Código verificado correctamente. Registro completo." });
+            }
+            else
+            {
+                return BadRequest(new { message = errorMessage });
+            }
+        }
+
 
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] UserLoginRequestDto request)
@@ -102,37 +126,41 @@ namespace Autenticacion.Controllers
 
         }
 
-        private async Task SendVerificationEmail(IdentityUser user)
-        {
-            var verificationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var verificationCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(verificationToken));
+        //private async Task SendVerificationEmail(IdentityUser user)
+        //{
+        //    var verificationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        //    var verificationCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(verificationToken));
 
-            // URL de confirmación de correo electrónico con el código de verificación
-            var callBackUrl = $@"{Request.Scheme}://{Request.Host}{Url.Action("ConfirmEmail", controller: "Authentication",
-                                    new { userId = user.Id, code = verificationCode })}";
+        //    // URL de confirmación de correo electrónico con el código de verificación
+            
+        //    //falta cambiar la url para que apunte al post de Codeverification
 
-            // URL del logotipo de Cajita Seguros
-            var imageUrl = "https://www.rua-asistencia.com.py/wp-content/uploads/sites/18/2021/09/1630702216674-1080x628.jpg";
 
-            // Cuerpo del correo electrónico con la imagen incrustada y el enlace de confirmación
-            var emailBody = $@"
-                <p>¡Bienvenido/a a Cajita Seguros!</p>
-                <p>Por favor, confirma tu cuenta haciendo clic en el siguiente botón:</p>
-                <p><a href='{HtmlEncoder.Default.Encode(callBackUrl)}'><button style='background-color: #4CAF50; /* Green */
-                border: none;
-                color: white;
-                padding: 15px 32px;
-                text-align: center;
-                text-decoration: none;
-                display: inline-block;
-                font-size: 16px;'>Confirmar tu cuenta</button></a></p>
-                <p>También puedes escanear el siguiente código QR:</p>
-                <p><img src='{imageUrl}' alt='Cajita Seguros Logo'></p>
-                <p>Gracias por unirte a Cajita Seguros.</p>";
+        //    var callBackUrl = $@"{Request.Scheme}://{Request.Host}{Url.Action("ConfirmEmail", controller: "Authentication",
+        //                            new { userId = user.Id, code = verificationCode })}";
 
-            // Envía el correo electrónico de confirmación
-            await _emailSender.SendEmailAsync(user.Email, "Confirmar tu cuenta en Cajita Seguros", emailBody);
-        }
+        //    // URL del logotipo de Cajita Seguros
+        //    var imageUrl = "https://www.rua-asistencia.com.py/wp-content/uploads/sites/18/2021/09/1630702216674-1080x628.jpg";
+
+        //    // Cuerpo del correo electrónico con la imagen incrustada y el enlace de confirmación
+        //    var emailBody = $@"
+        //        <p>¡Bienvenido/a a Cajita Seguros!</p>
+        //        <p>Por favor, confirma tu cuenta haciendo clic en el siguiente botón:</p>
+        //        <p><a href='{HtmlEncoder.Default.Encode(callBackUrl)}'><button style='background-color: #4CAF50; /* Green */
+        //        border: none;
+        //        color: white;
+        //        padding: 15px 32px;
+        //        text-align: center;
+        //        text-decoration: none;
+        //        display: inline-block;
+        //        font-size: 16px;'>Confirmar tu cuenta</button></a></p>
+        //        <p>También puedes escanear el siguiente código QR:</p>
+        //        <p><img src='{imageUrl}' alt='Cajita Seguros Logo'></p>
+        //        <p>Gracias por unirte a Cajita Seguros.</p>";
+
+        //    // Envía el correo electrónico de confirmación
+        //    await _emailSender.SendEmailAsync(user.Email, "Confirmar tu cuenta en Cajita Seguros", emailBody);
+        //}
 
         [HttpPost("ForgotPassword")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto request)

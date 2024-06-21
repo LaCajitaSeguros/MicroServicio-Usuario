@@ -19,6 +19,8 @@ namespace Application.Service
 
         Task<(bool IsSuccess, string ErrorMessage)> GenerateAndSendVerificationCodeAsync(string emailAddress);
         Task<(bool IsSuccess, string ErrorMessage)> VerifyAndResetPasswordAsync(string emailAddress, string code, string newPassword);
+        Task<AuthResult> VerifyCodeAndCompleteRegistrationAsync(VerifyCodeRequestDto verifyCodeRequestDto);
+        Task<(bool isSuccess, string? errorMessage)> VerifyCodeAsync(string code);
 
 
 
