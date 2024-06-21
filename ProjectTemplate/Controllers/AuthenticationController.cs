@@ -67,17 +67,6 @@ namespace Autenticacion.Controllers
                 return BadRequest(result);
             }
 
-
-            //if (result.Result)
-            //{
-            //    return Ok(result);
-            //}
-            //else
-            //{
-            //    return BadRequest(result);
-            //}
-
-
         }
 
         [HttpPost("VerifyRegistration")]
@@ -137,41 +126,41 @@ namespace Autenticacion.Controllers
 
         }
 
-        private async Task SendVerificationEmail(IdentityUser user)
-        {
-            var verificationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var verificationCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(verificationToken));
+        //private async Task SendVerificationEmail(IdentityUser user)
+        //{
+        //    var verificationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        //    var verificationCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(verificationToken));
 
-            // URL de confirmación de correo electrónico con el código de verificación
+        //    // URL de confirmación de correo electrónico con el código de verificación
             
-            //falta cambiar la url para que apunte al post de Codeverification
+        //    //falta cambiar la url para que apunte al post de Codeverification
 
 
-            var callBackUrl = $@"{Request.Scheme}://{Request.Host}{Url.Action("ConfirmEmail", controller: "Authentication",
-                                    new { userId = user.Id, code = verificationCode })}";
+        //    var callBackUrl = $@"{Request.Scheme}://{Request.Host}{Url.Action("ConfirmEmail", controller: "Authentication",
+        //                            new { userId = user.Id, code = verificationCode })}";
 
-            // URL del logotipo de Cajita Seguros
-            var imageUrl = "https://www.rua-asistencia.com.py/wp-content/uploads/sites/18/2021/09/1630702216674-1080x628.jpg";
+        //    // URL del logotipo de Cajita Seguros
+        //    var imageUrl = "https://www.rua-asistencia.com.py/wp-content/uploads/sites/18/2021/09/1630702216674-1080x628.jpg";
 
-            // Cuerpo del correo electrónico con la imagen incrustada y el enlace de confirmación
-            var emailBody = $@"
-                <p>¡Bienvenido/a a Cajita Seguros!</p>
-                <p>Por favor, confirma tu cuenta haciendo clic en el siguiente botón:</p>
-                <p><a href='{HtmlEncoder.Default.Encode(callBackUrl)}'><button style='background-color: #4CAF50; /* Green */
-                border: none;
-                color: white;
-                padding: 15px 32px;
-                text-align: center;
-                text-decoration: none;
-                display: inline-block;
-                font-size: 16px;'>Confirmar tu cuenta</button></a></p>
-                <p>También puedes escanear el siguiente código QR:</p>
-                <p><img src='{imageUrl}' alt='Cajita Seguros Logo'></p>
-                <p>Gracias por unirte a Cajita Seguros.</p>";
+        //    // Cuerpo del correo electrónico con la imagen incrustada y el enlace de confirmación
+        //    var emailBody = $@"
+        //        <p>¡Bienvenido/a a Cajita Seguros!</p>
+        //        <p>Por favor, confirma tu cuenta haciendo clic en el siguiente botón:</p>
+        //        <p><a href='{HtmlEncoder.Default.Encode(callBackUrl)}'><button style='background-color: #4CAF50; /* Green */
+        //        border: none;
+        //        color: white;
+        //        padding: 15px 32px;
+        //        text-align: center;
+        //        text-decoration: none;
+        //        display: inline-block;
+        //        font-size: 16px;'>Confirmar tu cuenta</button></a></p>
+        //        <p>También puedes escanear el siguiente código QR:</p>
+        //        <p><img src='{imageUrl}' alt='Cajita Seguros Logo'></p>
+        //        <p>Gracias por unirte a Cajita Seguros.</p>";
 
-            // Envía el correo electrónico de confirmación
-            await _emailSender.SendEmailAsync(user.Email, "Confirmar tu cuenta en Cajita Seguros", emailBody);
-        }
+        //    // Envía el correo electrónico de confirmación
+        //    await _emailSender.SendEmailAsync(user.Email, "Confirmar tu cuenta en Cajita Seguros", emailBody);
+        //}
 
         [HttpPost("ForgotPassword")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto request)

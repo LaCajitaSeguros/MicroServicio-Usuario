@@ -50,13 +50,18 @@ namespace Application.Service.ServiceImpl
             }
 
 
-            
-
-
             var verificationCode = GenerateVerificationCode(requestDto.EmailAddress);
 
-            var emailBody = $"Su código de verificación para el registro es : {verificationCode}";
-            await _emailSender.SendEmailAsync(requestDto.EmailAddress, "Código de Verificación", emailBody);
+            var emailBody = $@"
+            <p>Estimado/a,</p>
+            <p>¡Bienvenido/a a CajitaSeguros!</p>
+            <p>Nos complace tenerlo/a con nosotros. Su código de verificación para el registro es: <strong>{verificationCode}</strong></p>
+            <p>Por favor, ingrese este código en la página de registro para completar su inscripción.</p>
+            <p>Si tiene alguna pregunta o necesita asistencia, no dude en contactarnos.</p>
+            <p>Gracias por elegir CajitaSeguros.</p>
+            <p>Saludos cordiales,<br/>El equipo de CajitaSeguros</p>";
+
+            await _emailSender.SendEmailAsync(requestDto.EmailAddress, "Bienvenido a CajitaSeguros - Código de Verificación", emailBody);
 
 
 
@@ -77,48 +82,12 @@ namespace Application.Service.ServiceImpl
                 return new AuthResult { Result = false, Errors = verifyResult.Errors };
             }
 
-            return new AuthResult { Result = true, Message = "Verification code sent to email." };
-
-
-   
-           
-
-            //var user = new IdentityUser
-            //{
-            //    Email = requestDto.EmailAddress,
-            //    UserName = requestDto.EmailAddress
-            //};
-
-            //var result = await _userManager.CreateAsync(user, requestDto.Password);
+            return new AuthResult { Result = true, Message = "Verification code sent to email." 
+                , UserId=verifyResult.UserId,Name=verifyResult.Name,LastName=verifyResult.LastName};
 
 
 
-            //if (result.Succeeded)
-            //{
-            //    var userDto = new User
-            //    {
-            //        UserId = user.Id,
-            //        Name = requestDto.Name,
-            //        LastName = requestDto.LastName,
-            //        Dni = requestDto.Dni,
-            //        EmailAddress = requestDto.EmailAddress,
-            //        Password = _validation.HashPassword(requestDto.Password),
 
-            //    };
-
-            //    await _userRepository.AddUserAsync(userDto);
-
-            //    //var token = _validation.GenerationToken(user);
-            //    return new AuthResult { Result = true };
-            //}
-            //else
-            //{
-            //    var errors = new List<string>();
-            //    foreach (var err in result.Errors)
-            //        errors.Add(err.Description);
-
-            //    return new AuthResult { Result = true, Errors = errors };
-            //}
         }
 
 
@@ -159,7 +128,7 @@ namespace Application.Service.ServiceImpl
 
                 await _userRepository.AddUserAsync(userDto);
 
-                return new AuthResult { Result = true };
+                return new AuthResult { Result = true, UserId = userDto.UserId,Name=userDto.Name,LastName=userDto.LastName};
             }
             else
             {
@@ -184,7 +153,7 @@ namespace Application.Service.ServiceImpl
                 return (new AuthResult
                 {
                     Result = false,
-                    Errors = new List<string> { "Email needs to be confirmed" }
+                    Errors = new List<string> { "Se debe confirmar el email" }
                 });
 
             // Verificar si la contraseña es correcta
@@ -267,6 +236,8 @@ namespace Application.Service.ServiceImpl
                 return (false, "No se pudo generar el código de verificación.");
             }
         }
+
+
 
         public async Task<(bool IsSuccess, string ErrorMessage)> VerifyAndResetPasswordAsync(string emailAddress, string code, string newPassword)
         {

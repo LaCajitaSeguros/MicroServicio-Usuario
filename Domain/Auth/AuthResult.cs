@@ -14,5 +14,11 @@ namespace Application.Auth
 
         public List<string> Errors { get; set; }
         public string Message { get; set; }
+
+        public string UserId { get; set; }
+        public string Name { get; set; }
+        public string LastName { get; set; }
+
+
     }
 }
