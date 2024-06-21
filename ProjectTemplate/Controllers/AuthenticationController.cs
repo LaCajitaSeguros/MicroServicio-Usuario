@@ -17,7 +17,7 @@ using XAct.Users;
 
 namespace Autenticacion.Controllers
 {
-    [Route("api/[controller]")]
+      [Route("api/[controller]")]
     [ApiController]
     public class AuthenticationController : Controller
     {
@@ -58,7 +58,7 @@ namespace Autenticacion.Controllers
 
                 }
                  //Envía el correo de verificación
-               // await SendVerificationEmail(user);
+                //await SendVerificationEmail(user);
 
                 return Ok(result);
             }
@@ -92,11 +92,11 @@ namespace Autenticacion.Controllers
 
             if (isSuccess)
             {
-                return Ok("Código verificado correctamente. Registro completo.");
+                return Ok(new { message = "Código verificado correctamente. Registro completo." });
             }
             else
             {
-                return BadRequest(errorMessage);
+                return BadRequest(new { message = errorMessage });
             }
         }
 
