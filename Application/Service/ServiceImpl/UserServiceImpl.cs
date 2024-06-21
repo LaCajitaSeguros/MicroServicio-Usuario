@@ -54,12 +54,11 @@ namespace Application.Service.ServiceImpl
 
             var emailBody = $@"
             <p>Estimado/a,</p>
-            <p>¡Bienvenido/a a CajitaSeguros!</p>
+            <p>¡Bienvenido/a a La Cajita Seguros!</p>
             <p>Nos complace tenerlo/a con nosotros. Su código de verificación para el registro es: <strong>{verificationCode}</strong></p>
-            <p>Por favor, ingrese este código en la página de registro para completar su inscripción.</p>
+            <p>Por favor, ingrese este código en la página de registro para completarlo.</p>
             <p>Si tiene alguna pregunta o necesita asistencia, no dude en contactarnos.</p>
-            <p>Gracias por elegir CajitaSeguros.</p>
-            <p>Saludos cordiales,<br/>El equipo de CajitaSeguros</p>";
+            <p>Saludos cordiales,<br/>El equipo de La Cajita Seguros</p>";
 
             await _emailSender.SendEmailAsync(requestDto.EmailAddress, "Bienvenido a CajitaSeguros - Código de Verificación", emailBody);
 
