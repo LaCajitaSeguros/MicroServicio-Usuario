@@ -22,7 +22,7 @@ namespace Application.Service
         Task<AuthResult> VerifyCodeAndCompleteRegistrationAsync(VerifyCodeRequestDto verifyCodeRequestDto);
         Task<(bool isSuccess, string? errorMessage)> VerifyCodeAsync(string code);
 
-
+        Task<string> GetEmail(string email);
 
     }
 }

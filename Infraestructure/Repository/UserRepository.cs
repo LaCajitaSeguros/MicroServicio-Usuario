@@ -33,7 +33,13 @@ namespace Infraestructure.Command
 
         }
 
-
+        public async Task<string> GetByMailAsync(string mail)
+        {
+            return await _dbContext.User
+                   .Where(u => u.EmailAddress == mail)
+                    .Select(u => u.UserId)
+                    .FirstOrDefaultAsync();
+        }
 
     }
 }

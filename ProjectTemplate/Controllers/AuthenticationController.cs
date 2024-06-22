@@ -209,7 +209,8 @@ namespace Autenticacion.Controllers
             var user = await _userManager.FindByEmailAsync(requestDto.EmailAddress);
             if (user != null)
             {
-                return Ok(new { exists = true });
+                var id = userService.GetEmail(requestDto.EmailAddress);
+                return Ok(new { exists = true, userId = id.Result });
             }
             else
             {

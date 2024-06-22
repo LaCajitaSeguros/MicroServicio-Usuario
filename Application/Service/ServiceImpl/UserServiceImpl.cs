@@ -14,6 +14,7 @@ using System.Security.Policy;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Routing;
+using Autenticacion.Controllers;
 
 namespace Application.Service.ServiceImpl
 {
@@ -164,7 +165,14 @@ namespace Application.Service.ServiceImpl
 
             // Generar token de autenticación
             var token = _validation.GenerationToken(existingUser);
-            return new AuthResult { Result = true, Token = token };
+            var id = await _userRepository.GetByMailAsync(request.EmailAddress);
+            return new AuthResult { Result = true, Token = token, UserId = id };
+        }
+
+        public async Task<string> GetEmail(string email)
+        {
+            var id = await _userRepository.GetByMailAsync(email);
+            return id;
         }
 
 
