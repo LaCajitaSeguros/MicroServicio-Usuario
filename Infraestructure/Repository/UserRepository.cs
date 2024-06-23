@@ -41,5 +41,12 @@ namespace Infraestructure.Command
                     .FirstOrDefaultAsync();
         }
 
+        public async Task<string> GetUserNameAsync(string id)
+        {
+            return await _dbContext.User
+                   .Where(u => u.UserId == id)
+                    .Select(u => u.Name)
+                    .FirstOrDefaultAsync();
+        }
     }
 }

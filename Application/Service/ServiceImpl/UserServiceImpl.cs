@@ -166,7 +166,8 @@ namespace Application.Service.ServiceImpl
             // Generar token de autenticación
             var token = _validation.GenerationToken(existingUser);
             var id = await _userRepository.GetByMailAsync(request.EmailAddress);
-            return new AuthResult { Result = true, Token = token, UserId = id };
+            var userName = await _userRepository.GetUserNameAsync(id);
+            return new AuthResult { Result = true, Token = token, UserId = id, Name = userName };
         }
 
         public async Task<string> GetEmail(string email)

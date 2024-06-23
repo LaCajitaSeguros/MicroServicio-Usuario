@@ -11,7 +11,7 @@ namespace Infraestructure.Repository
     {
       Task AddUserAsync(User user);
       Task<User> GetByCodeAsync(string code);
-        Task<string> GetByMailAsync(string mail);
-
+      Task<string> GetByMailAsync(string mail);
+      Task<string> GetUserNameAsync(string id);
     }
 }
